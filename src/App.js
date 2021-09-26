@@ -58,7 +58,7 @@ function App() {
     }
   }
 
-  const getMarkerID = (name) => {
+  const getURLParam = (name) => {
     var results = new RegExp('[?&]' + name + '=([^&#]*)').exec(window.location.href);
     if (results == null){
        return null;
@@ -145,22 +145,26 @@ function App() {
     }
   }
 
+  const getPostStyle = (isSelected) => {
+    return isSelected ? 'post-header post-header-selected' : 'post-header'
+  }
+
   return (
     <div className="post">
-      <div className="post-header">
-        <img src={DEMO_POSTS[getMarkerID("markerID")].profile_picutre} alt='profile' className='avatar'/>
+      <div className={getPostStyle(getURLParam("isSelected"))}>
+        <img src={DEMO_POSTS[getURLParam("markerID")].profile_picutre} alt='profile' className='avatar'/>
         <div>
-        {DEMO_POSTS[getMarkerID("markerID")].user}
+        {DEMO_POSTS[getURLParam("markerID")].user}
         </div>
         <div>
-          {DEMO_POSTS[getMarkerID("markerID")].likes} Likes
+          {DEMO_POSTS[getURLParam("markerID")].likes} Likes
         </div>
         <div>
-          {getTimeUntilToday(DEMO_POSTS[getMarkerID("markerID")].date)} Days ago
+          {getTimeUntilToday(DEMO_POSTS[getURLParam("markerID")].date)} Days ago
         </div>
       </div>
       <div className="post-body">
-        {getPostDisplay(DEMO_POSTS[getMarkerID("markerID")])}
+        {getPostDisplay(DEMO_POSTS[getURLParam("markerID")])}
       </div>
     </div>
   );
