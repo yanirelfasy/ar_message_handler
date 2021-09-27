@@ -1,62 +1,39 @@
 import './App.css';
-import {useEffect} from 'react';
+import {useEffect, useState} from 'react';
+import {getMessageDetails, getUserDetails} from './FirebaseHandler';
 
 
 function App() {
 
-  useEffect(() => {
-    playVideo("media-video")
-  })
+  const [isLoading, setIsLoading] = useState(true);
+  const [postData, setPostData] = useState({});
 
-  const DEMO_POSTS = {
-    "0001": {
-      id:  "0001",
-      user: "Yanir Elfassy",
-      content: "Test message! Thats how the content will look like on close points Test message! Thats how the content will look like on close points Test message! Thats how the content will look like on close points Test message! Thats how the content will look like on close points Test message! Thats how the content will look like on close points Test message! Thats how the content will look like on close points Test message! Thats how the content will look like on close points Test message! Thats how the content will look like on close points Test message! Thats how the content will look like on close points Test message! Thats how the content will look like on close points Test message! Thats how the content will look like on close points ",
-      profile_picutre: 'https://images.pexels.com/photos/771742/pexels-photo-771742.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500',
-      date: new Date("09/10/2021"),
-      likes: 35,
-      media: {
-        photos: ['https://www.brides.com/thmb/daHLiJ0Tv2kw7k1Yh8eRwfbF0hw=/4656x2619/filters:fill(auto,1)/__opt__aboutcom__coeus__resources__content_migration__brides__proteus__5c40fd368b27912d65776fbf__169-def134e374394adaa7b6e2f3cbcdac37.jpeg'],
-        videos: []
-      }
-    },
-    "0002": {
-      user: "Yanir Elfassy",
-      content: null,
-      profile_picutre: 'https://images.pexels.com/photos/771742/pexels-photo-771742.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500',
-      date: new Date("09/10/2021"),
-      likes: 35,
-      media: {
-        photos: [
-          'https://images.unsplash.com/photo-1540324155974-7523202daa3f?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxzZWFyY2h8MXx8ZGFuY2V8ZW58MHx8MHx8&w=1000&q=80',
-        ],
-        videos: []
-      }
-    },
-    "0003":{
-      user: "Yanir Elfassy",
-      content: "זה פוסט רק עם מלל",
-      profile_picutre: 'https://images.pexels.com/photos/771742/pexels-photo-771742.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500',
-      date: new Date("09/10/2021"),
-      likes: 35,
-      media: {
-        photos: [],
-        videos: []
-      }
-    },
-    "0004":{
-      user: "Yanir Elfassy",
-      content: "זה פוסט רק עם מלל",
-      profile_picutre: 'https://images.pexels.com/photos/771742/pexels-photo-771742.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500',
-      date: new Date("09/10/2021"),
-      likes: 35,
-      media: {
-        photos: [],
-        videos: []
-      }
+
+
+  useEffect(() => {
+
+    const getPostDetails = async () => {
+      setIsLoading(true);
+
+      // let messageDetails = await getMessageDetails("8e6ba7a4-8463-40e3-bfbb-b85cbfd64020");
+      let messageDetails = await getMessageDetails(getURLParam("markerID"));
+      let userDetails = await getUserDetails(messageDetails.userID);
+      setPostData(prev => {return {
+        userID: userDetails.userID,
+        messageID: messageDetails.id,
+        profilePicture: userDetails.profilePicture,
+        likes: messageDetails.likeID.length,
+        media: messageDetails.mediaContent,
+        content: messageDetails.textContent,
+        userName: userDetails.userName,
+        creationDate: messageDetails.creationDate
+      }})
+      setIsLoading(false);
     }
-  }
+
+    getPostDetails()
+  },[])
+
 
   const getURLParam = (name) => {
     var results = new RegExp('[?&]' + name + '=([^&#]*)').exec(window.location.href);
@@ -70,8 +47,9 @@ function App() {
 
   const getTimeUntilToday = (date) => {
     let currentDate = new Date(Date.now());
+    let postDate = new Date(Date.parse(date));
     const oneDay = 1000 * 60 * 60 * 24;
-    const diffInTime = currentDate.getTime() - date.getTime();
+    const diffInTime = currentDate.getTime() - postDate.getTime();
     const diffInDays = Math.round(diffInTime / oneDay);
     return diffInDays;
   }
@@ -83,7 +61,6 @@ function App() {
   }
 
   const PostWithTextOnly = (props) => {
-    const {postData} = props;
     return (
       <div>
         <div className="post-content">
@@ -94,13 +71,12 @@ function App() {
   }
 
   const PostWithMediaOnly = (props) => {
-    const {postData} = props;
     return (
       <div className='media-post-body'>
         <div className="post-media">
           {
-            postData.media.photos[0]?
-              <img src={postData.media.photos[0]} className='post-photo' alt='post media'/>:
+            postData.media[0]?
+              <img src={postData.media[0]} className='post-photo' alt='post media'/>:
               null
           }
         </div>
@@ -109,7 +85,6 @@ function App() {
   }
 
   const PostWithMixedContent = (props) => {
-    const {postData} = props;
       return (
         <div className='media-post-body-mixed'>
           <div className="post-content">
@@ -117,8 +92,8 @@ function App() {
           </div>
           <div className="post-media-mixed">
           {
-            postData.media.photos[0]?
-              <img src={postData.media.photos[0]} className='post-photo' alt='post media'/>:
+            postData.media[0]?
+              <img src={postData.media[0]} className='post-photo' alt='post media'/>:
               null
           }
           </div>
@@ -126,47 +101,44 @@ function App() {
       )
   }
 
-  const getPostDisplay = (postData) => {
-    if(postData.content && (postData.media.photos.length > 0 || postData.media.videos.length > 0)){
-      return <PostWithMixedContent postData={postData}/>
+  const getPostDisplay = () => {
+    if(postData.content && postData.media.length > 0){
+      return <PostWithMixedContent />
     }
     else if(postData.content){
-      return <PostWithTextOnly postData={postData}/>
+      return <PostWithTextOnly />
     }
     else{
-      return <PostWithMediaOnly postData={postData}/>
+      return <PostWithMediaOnly />
     }
   }
 
-  const playVideo = (videoID) => {
-    let myVideo = document.getElementById(videoID)
-    if(myVideo){
-      myVideo.play();
-    }
-  }
 
   const getPostStyle = (isSelected) => {
     return isSelected ? 'post-header post-header-selected' : 'post-header'
   }
 
   return (
-    <div className="post">
-      <div className={getPostStyle(getURLParam("isSelected"))}>
-        <img src={DEMO_POSTS[getURLParam("markerID")].profile_picutre} alt='profile' className='avatar'/>
-        <div>
-        {DEMO_POSTS[getURLParam("markerID")].user}
-        </div>
-        <div>
-          {DEMO_POSTS[getURLParam("markerID")].likes} Likes
-        </div>
-        <div>
-          {getTimeUntilToday(DEMO_POSTS[getURLParam("markerID")].date)} Days ago
-        </div>
+        !isLoading ?
+        <div className="post">
+          <div className={getPostStyle(getURLParam("isSelected"))}>
+            <img src={postData.profilePicture} alt='profile' className='avatar'/>
+            <div>
+              {postData.userName}
+            </div>
+            <div>
+              {postData.likes} Likes
+            </div>
+            <div>
+              {getTimeUntilToday(postData.creationDate)} Days ago
+            </div>
+          </div>
+          <div className="post-body">
+            {getPostDisplay()}
+          </div>
       </div>
-      <div className="post-body">
-        {getPostDisplay(DEMO_POSTS[getURLParam("markerID")])}
-      </div>
-    </div>
+      :
+      "LOADING"
   );
 }
 
