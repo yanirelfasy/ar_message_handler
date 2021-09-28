@@ -1,6 +1,6 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
-import { getFirestore, getDoc, doc} from 'firebase/firestore/lite';
+import { getFirestore, getDoc, doc, onSnapshot } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB3ihakYVIm0QineM-5mhxapktd7BYaj-4",
@@ -15,8 +15,16 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+export let listener = null;
+
+export const setListener = (messageID, onChange) => {
+	listener = onSnapshot(doc(db, "messages", messageID), (doc) => {
+		onChange(doc.data());
+	});
+}
 
 export const getMessageDetails = async (messageID) => {
+
 	const docRef = doc(db, "messages", messageID);
 	const docSnap = await getDoc(docRef);
 	if (docSnap.exists()) {
